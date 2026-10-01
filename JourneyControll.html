@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JourneyControl</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #16a34a;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Progress Bar Styles */
+        .progress-container {
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            background: var(--success-color);
+            height: 100%;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        /* Controls Panel */
+        .controls {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .custom-trip-box {
+            display: none;
+            margin-top: 10px;
+            gap: 10px;
+            flex-direction: column;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .custom-trip-box input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* Category Card Styles */
+        .category-card {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 15px;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #475569;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .item-row.packed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background: #f1f5f9;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-qty {
+            font-size: 0.85rem;
+            color: #64748b;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header with Progress -->
+    <header>
+        <h1>🎒 JourneyControl</h1>
+        <div class="progress-text">Packed: <span id="packedCount">0</span> / <span id="totalCount">0</span> items (<span id="percentage">0</span>%)</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </header>
+
+    <!-- Configuration Panel -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="tripType"><strong>Trip Type:</strong></label>
+            <select id="tripType" onchange="handleTripTypeChange()">
+                <option value="beach">Beach Trip</option>
+                <option value="mountain">Mountain Trip</option>
+                <option value="city">City Tour</option>
+                <option value="camping">Camping Trip</option>
+                <option value="custom" style="font-weight: bold; color: #2563eb;">+ Add New Trip Type...</option>
+            </select>
+        </div>
+
+        <!-- Hidden Custom Trip Input Box -->
+        <div id="customTripBox" class="custom-trip-box">
+            <label for="customTripName"><strong>New Trip Type Name:</strong></label>
+            <input type="text" id="customTripName" placeholder="e.g., Desert Safari, Business Trip">
+            <button class="btn-secondary" onclick="addNewTripType()">Save & Select Trip Type</button>
+        </div>
+
+        <div class="control-group">
+            <label for="tripDays"><strong>Number of Trip Days:</strong></label>
+            <input type="number" id="tripDays" value="3" min="1" max="30">
+        </div>
+        <button class="btn-primary" onclick="loadChecklist()">⚡ One Button to Add Them All</button>
+    </div>
+
+    <!-- Dynamic Categories Container -->
+    <div id="categoriesContainer"></div>
+</div>
+
+<script>
+    // Master Database for Presets
+    const masterData = {
+        beach: [
+            { name: "T-Shirts", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Shorts", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Swimwear", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Sunscreen", category: "Toiletries", baseQty: 1, isClothing: false },
+            { name: "Sunglasses", category: "Accessories", baseQty: 1, isClothing: false },
+            { name: "Passport & Tickets", category: "Documents", baseQty: 1, isClothing: false },
+            { name: "Phone Charger", category: "Electronics", baseQty: 1, isClothing: false }
+        ],
+        mountain: [
+            { name: "Thermal Tops", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Fleece Jacket", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Hiking Pants", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Toothbrush & Paste", category: "Toiletries", baseQty: 1, isClothing: false },
+            { name: "First Aid Kit", category: "Toiletries", baseQty: 1, isClothing: false },
+            { name: "ID & Permits", category: "Documents", baseQty: 1, isClothing: false },
+            { name: "Power Bank", category: "Electronics", baseQty: 1, isClothing: false }
+        ],
+        city: [
+            { name: "Casual Shirts", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Jeans/Trousers", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Walking Shoes", category: "Clothes", baseQty: 1, isClothing: false },
+            { name: "Toiletries Kit", category: "Toiletries", baseQty: 1, isClothing: false },
+            { name: "City Guide/Map", category: "Documents", baseQty: 1, isClothing: false },
+            { name: "Camera & Charger", category: "Electronics", baseQty: 1, isClothing: false }
+        ],
+        camping: [
+            { name: "Flannel Shirts", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Cargo Pants", category: "Clothes", baseQty: 1, isClothing: true },
+            { name: "Tent & Sleeping Bag", category: "Gear", baseQty: 1, isClothing: false },
+            { name: "Flashlight & Batteries", category: "Electronics", baseQty: 1, isClothing: false },
+            { name: "Insect Repellent", category: "Toiletries", baseQty: 1, isClothing: false }
+        ]
+    };
+
+    let activeItems = [];
+
+    function handleTripTypeChange() {
+        const selectElement = document.getElementById('tripType');
+        const customBox = document.getElementById('customTripBox');
+        
+        if (selectElement.value === 'custom') {
+            customBox.style.display = 'flex';
+        } else {
+            customBox.style.display = 'none';
+        }
+    }
+
+    function addNewTripType() {
+        const customNameInput = document.getElementById('customTripName');
+        const tripName = customNameInput.value.trim();
+
+        if (!tripName) {
+            alert('Please enter a valid trip name.');
+            return;
+        }
+
+        const tripKey = tripName.toLowerCase().replace(/\s+/g, '_');
+
+        if (!masterData[tripKey]) {
+            // Default generic items template for newly added custom trips
+            masterData[tripKey] = [
+                { name: "Daily Clothes", category: "Clothes", baseQty: 1, isClothing: true },
+                { name: "Toiletries", category: "Toiletries", baseQty: 1, isClothing: false },
+                { name: "ID / Documents", category: "Documents", baseQty: 1, isClothing: false },
+                { name: "Phone & Charger", category: "Electronics", baseQty: 1, isClothing: false }
+            ];
+        }
+
+        const selectElement = document.getElementById('tripType');
+        
+        // Check if option already exists
+        let existingOption = Array.from(selectElement.options).find(opt => opt.value === tripKey);
+        if (!existingOption) {
+            const newOption = document.createElement('option');
+            newOption.value = tripKey;
+            newOption.textContent = tripName;
+            selectElement.insertBefore(newOption, selectElement.lastElementChild);
+        }
+
+        selectElement.value = tripKey;
+        document.getElementById('customTripBox').style.display = 'none';
+        customNameInput.value = '';
+    }
+
+    function loadChecklist() {
+        const type = document.getElementById('tripType').value;
+        if (type === 'custom') {
+            alert('Please add and select a valid trip type first.');
+            return;
+        }
+
+        const days = parseInt(document.getElementById('tripDays').value) || 1;
+        const rawItems = masterData[type] || masterData['beach'];
+
+        activeItems = rawItems.map(item => ({
+            ...item,
+            qty: item.isClothing ? item.baseQty * days : item.baseQty,
+            packed: false
+        }));
+
+        renderApp();
+    }
+
+    function togglePacked(index) {
+        activeItems[index].packed = !activeItems[index].packed;
+        renderApp();
+    }
+
+    function renderApp() {
+        const container = document.getElementById('categoriesContainer');
+        container.innerHTML = '';
+
+        if (activeItems.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #64748b;">Click the button above to generate your checklist!</p>';
+            updateProgress();
+            return;
+        }
+
+        const categories = [...new Set(activeItems.map(item => item.category))];
+
+        categories.forEach(cat => {
+            const card = document.createElement('div');
+            card.className = 'category-card';
+
+            const title = document.createElement('div');
+            title.className = 'category-title';
+            title.textContent = cat;
+            card.appendChild(title);
+
+            const listDiv = document.createElement('div');
+            listDiv.className = 'item-list';
+
+            const catItems = activeItems
+                .map((item, originalIndex) => ({ ...item, originalIndex }))
+                .filter(item => item.category === cat)
+                .sort((a, b) => a.packed - b.packed);
+
+            catItems.forEach(item => {
+                const row = document.createElement('div');
+                row.className = `item-row ${item.packed ? 'packed' : ''}`;
+
+                row.innerHTML = `
+                    <div class="item-info">
+                        <input type="checkbox" ${item.packed ? 'checked' : ''} onclick="togglePacked(${item.originalIndex})">
+                        <span>${item.name}</span>
+                    </div>
+                    <span class="item-qty">Qty: ${item.qty}</span>
+                `;
+                listDiv.appendChild(row);
+            });
+
+            card.appendChild(listDiv);
+            container.appendChild(card);
+        });
+
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const total = activeItems.length;
+        const packed = activeItems.filter(item => item.packed).length;
+        const percentage = total === 0 ? 0 : Math.round((packed / total) * 100);
+
+        document.getElementById('packedCount').textContent = packed;
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('percentage').textContent = percentage;
+        document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    renderApp();
+</script>
+
+</body>
+</html>
